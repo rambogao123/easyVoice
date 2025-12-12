@@ -1,11 +1,11 @@
 export const asyncSleep = (delay = 200) => new Promise((resolve) => setTimeout(resolve, delay))
 
 const zhVoiceMap = {
-  'zh-CN-XiaoxiaoNeural': 'zh-CN-晓晓', // 标准普通话女声
+  'zh-CN-XiaoxiaoNeural': '温柔姐姐', // 标准普通话女声
   'zh-CN-XiaoyiNeural': 'zh-CN-晓伊', // 普通话男声
   'zh-CN-YunjianNeural': 'zh-CN-云健', // 普通话男声，剑指坚韧风格
-  'zh-CN-YunxiNeural': 'zh-CN-云希', // 普通话男声，温和自然
-  'zh-CN-YunxiaNeural': 'zh-CN-云夏', // 普通话女声，清新夏日感
+  'zh-CN-YunxiNeural': '阳光小哥', // 普通话男声，温和自然
+  'zh-CN-YunxiaNeural': '小女孩', // 普通话女声，清新夏日感
   'zh-CN-YunyangNeural': 'zh-CN-云扬', // 普通话男声，阳刚有力
   'zh-CN-liaoning-XiaobeiNeural': 'zh-CN-辽宁-晓北', // 辽宁方言女声，亲切东北风
   'zh-CN-shaanxi-XiaoniNeural': 'zh-CN-陕西-晓妮', // 陕西方言女声，带秦腔韵味
