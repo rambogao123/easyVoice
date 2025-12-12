@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "cross-env MODE=development pnpm -r --parallel dev",
+    "dev:root": "cross-env MODE=development pnpm -r --parallel dev",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "start": "cross-env MODE=production pnpm --filter @easy-voice/backend start"
