@@ -638,6 +638,9 @@ const generateAudio = async () => {
 
   try {
     const params = buildParams(inputText)
+    if (params.voice === 'zh-CN-YunxiaNeural-Variant') {
+      params.voice = 'zh-CN-YunxiaNeural'
+     }
     const { data } = await generateTTS(params)
     if (!data) {
       throw new Error(`no data returned from generateTTS`)
@@ -658,6 +661,9 @@ const generateAudioTask = async () => {
 
   try {
     const params = buildParams(inputText)
+    if (params.voice === 'zh-CN-YunxiaNeural-Variant') {
+      params.voice = 'zh-CN-YunxiaNeural'
+    }
     const stream = await createTaskStream(params)
     if (!(stream instanceof ReadableStream)) {
       if (stream.code && stream.data) {
