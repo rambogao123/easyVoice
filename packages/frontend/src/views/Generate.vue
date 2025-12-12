@@ -69,7 +69,7 @@
           <!-- 预设语音选择 -->
           <div v-if="audioConfig.voiceMode === 'preset'" class="voice-selector">
             <el-form label-position="top" size="default">
-              <el-form-item label="语言">
+              <!-- <el-form-item label="语言">
                 <el-select
                   v-model="audioConfig.selectedLanguage"
                   placeholder="选择语言"
@@ -82,9 +82,9 @@
                     :value="lang.code"
                   />
                 </el-select>
-              </el-form-item>
+              </el-form-item> -->
 
-              <el-form-item label="性别">
+              <!-- <el-form-item label="性别">
                 <el-select
                   v-model="audioConfig.selectedGender"
                   placeholder="选择性别"
@@ -94,7 +94,7 @@
                   <el-option label="男性" value="Male" />
                   <el-option label="女性" value="Female" />
                 </el-select>
-              </el-form-item>
+              </el-form-item> -->
 
               <el-form-item label="语音">
                 <el-select v-model="audioConfig.selectedVoice" placeholder="选择语音" filterable>
@@ -327,7 +327,7 @@ const reset = () => {
     configStore.reset()
   })
 }
-const updateConfig = (prop: keyof AudioConfig, value: string) => {
+const updateConfig = <K extends keyof AudioConfig>(prop: K, value: AudioConfig[K]) => {
   configStore.updateConfig(prop, value)
 }
 const betterShowCN = (voiceList: Voice[]) => {
@@ -341,15 +341,30 @@ const betterShowCN = (voiceList: Voice[]) => {
   }
   return voiceList
 }
+// 允许的语音列表
+const ALLOWED_VOICES = ['zh-CN-XiaoxiaoNeural', 'zh-CN-YunxiNeural', 'zh-CN-YunxiaNeural']
+
 const filteredVoices = computed(() => {
-  return betterShowCN(
+  // 获取基础语音列表
+  const voices = betterShowCN(
     voiceList.value.filter((voice) => {
-      const matchLanguage = voice.Name.startsWith(audioConfig.selectedLanguage)
-      const matchGender =
-        audioConfig.selectedGender === 'All' || voice.Gender === audioConfig.selectedGender
-      return matchLanguage && matchGender
+      return ALLOWED_VOICES.includes(voice.Name)
     })
   )
+
+  // 手动添加云夏的变体版本
+  const yunxia = voices.find(v => v.Name === 'zh-CN-YunxiaNeural')
+  if (yunxia) {
+    voices.push({
+      ...yunxia,
+      Name: 'zh-CN-YunxiaNeural-Variant', // 特殊标识符
+      cnName: '小男孩', // 给个区分的名称，假设音调不同是为了表现不同年龄或情感
+      // 这里的 ShortName 保持原样或者也改一下，主要看后端用哪个字段，通常后端用 Name 或 ShortName
+      // 假设后端用 Name 作为 voice 参数，我们需要在 buildParams 里处理
+    })
+  }
+  
+  return voices
 })
 
 const canGenerate = computed(() => {
@@ -382,6 +397,44 @@ const formatVolume = (val: number) => {
 const formatPitch = (val: number) => {
   return val >= 0 ? `+${val}Hz` : `${val}Hz`
 }
+
+// 监听选中的语音变化，自动调整参数
+watch(
+  () => audioConfig.selectedVoice,
+  (newVoice, oldVoice) => {
+    if (newVoice === oldVoice) return
+    
+    console.log('newVoice---', newVoice)
+    // 根据不同语音自动调整参数
+    switch (newVoice) {
+      case 'zh-CN-XiaoxiaoNeural':
+        updateConfig('rate', -10)      // 语速减少 -10%
+        updateConfig('volume', 20)     // 音量增加 +20%
+        updateConfig('pitch', -10)     // 音调降低 -10Hz
+        ElMessage.success('已为晓晓声音自动优化参数')
+        break
+      case 'zh-CN-YunxiNeural':
+        updateConfig('rate', -10)      // 语速减少 -10%
+        updateConfig('volume', 20)     // 音量增加 +20%
+        updateConfig('pitch', -5)      // 音调降低 -5Hz
+        ElMessage.success('已为云希声音自动优化参数')
+        break
+      case 'zh-CN-YunxiaNeural':
+        updateConfig('rate', 0)        // 语速保持默认
+        updateConfig('volume', 20)     // 音量增加 +15%
+        updateConfig('pitch', 20)       // 音调保持默认
+        ElMessage.success('已为云夏声音自动优化参数')
+        break
+      case 'zh-CN-YunxiaNeural-Variant':
+        updateConfig('rate', 0)        // 语速保持默认
+        updateConfig('volume', 20)     // 音量增加 +20%
+        updateConfig('pitch', -15)      // 音调增加 +15Hz (变体)
+        ElMessage.success('已为云夏(少年版)声音自动优化参数')
+        break
+    }
+  }
+)
+
 watch(
   () => audioConfig.selectedLanguage,
   (value, oldValue) => {
@@ -517,6 +570,9 @@ const previewAudio = async () => {
   previewLoading.value = true
   try {
     const params = buildParams(previewText)
+     if (params.voice === 'zh-CN-YunxiaNeural-Variant') {
+      params.voice = 'zh-CN-YunxiaNeural'
+     }
     const { data } = await generateTTS(params)
     if (data?.audio) {
       updateConfig('previewAudioUrl', data?.audio)
